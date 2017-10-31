@@ -8,12 +8,12 @@ services:
                 TIMEZONE: ${TIMEZONE}
         volumes:
             - ./wps:/var/www/weather-api
-    nginx:
-        build:
-            context: docker/nginx
+    web:
+        image: nginx:latest
         ports:
-            - 8383:80
-        volumes_from:
-            - php
+            - "8080:80"
         volumes:
-            - ./logs/nginx/:/var/log/nginx
+            - ./wps:/var/www/weather-api
+            - ./api.conf:/etc/nginx/conf.d/site.conf
+        links:
+            - php
