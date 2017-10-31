@@ -5,4 +5,4 @@ services:
     ports:
       - '8383:80'
     volumes:
-      - ./wps:/var/www/api
+      - ./wps:/var/www/weather-api
