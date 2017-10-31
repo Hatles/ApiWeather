@@ -11,7 +11,7 @@ services:
     web:
         image: nginx:latest
         ports:
-            - "8080:80"
+            - "8383:80"
         volumes:
             - ./wps:/var/www/weather-api
             - ./api.conf:/etc/nginx/conf.d/site.conf
