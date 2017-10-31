@@ -42,12 +42,12 @@ try
 
     while (!$good && $wpsIndex < sizeof($nearby_weather_stations) && $wpsIndex < $maxWps) {
         $wps = $nearby_weather_stations[$wpsIndex];
-        var_dump($wps);
         $wpsid = $wps->id;
         $data = getWeatherData($wpsid, $yr, $mo, $da);
         if(dataHasWind($data))
         {
             $timeData = getTimeData($data, $timestamp);
+            $timeData['country'] = $wps->country;
             echo json_encode($timeData);
             $good = true;
         }
@@ -116,7 +116,16 @@ function getTimeData($data, $timestamp)
     $headers = $data[0];
 
     for($i = 0; $i < sizeof($lastData); $i++) {
-        $timeData[$headers[$i]] = $lastData[$i];
+        $value = $lastData[$i];
+        if(is_numeric($value))
+        {
+            $value = floatval($value);
+            if($value < 0)
+            {
+                $value = "null";
+            }
+        }
+        $timeData[$headers[$i]] = $value;
     }
 
     return $timeData;
