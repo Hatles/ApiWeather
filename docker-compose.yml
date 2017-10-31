@@ -1,16 +1,20 @@
 version: '2'
 
-services:
-    web:
-        image: nginx:latest
-        ports:
-            - "8383:80"
-        volumes:
-            - ./wps:/var/www/weather-api
-            - ./api.conf:/etc/nginx/conf.d/site.conf
-        links:
-            - php
+# Webstack PHP
+    nginx:
+      image: nginx:stable
+      volumes:
+        - ./logs/nginx/:/var/log/nginx
+        - ./config/nginx/:/etc/nginx/conf.d
+        - ./wps:/var/www/weather-api/
+      links:
+        - php:fpm
+      ports:
+        - 8383:80
+
     php:
-        image: php:7-fpm
+        build: docker/php7-fpm
         volumes:
-            - ./wps:/var/www/weather-api
+            - ./logs/app:/var/www/app/var/logs
+            - ./config/php:/usr/local/etc/php/conf.d
+            - ./wps:/var/www/weather-api/
