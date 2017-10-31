@@ -1,72 +1,80 @@
 <?php
 
-$lat = 43.72000122;
-$lon = 4.94999981;
-$timestamp = 1508497638;
-$maxWps = 15;
+try
+{
 
-if (isset($_GET['lat'])) {
-    $lat = (floatval($_GET['lat']));
-}
-if (isset($_GET['lon'])) {
-    $lon = (floatval($_GET['lon']));
-}
-if (isset($_GET['datetime'])) {
-    $timestamp = (intval($_GET['datetime']));
-}
+    $lat = 43.72000122;
+    $lon = 4.94999981;
+    $timestamp = 1508497638;
+    $maxWps = 15;
 
-$datetime = new DateTime('@'.$timestamp);
-$datetime->setTimezone(new DateTimeZone('Europe/Paris'));
-
-$yr = $datetime->format('Y');
-$mo = $datetime->format('m');
-$da = $datetime->format('d');
-
-$wunderwpsstring = sprintf('https://api-ak.wunderground.com/api/d8585d80376a429e/geolookup/alerts/lang:EN/units:english/bestfct:1/v:2.0/q/%s,%s.json', $lat, $lon);
-//$wunderwpsstring = sprintf('https://stationdata.wunderground.com/cgi-bin/stationdata?v=2.0&type=ICAO%%2CPWS&units=english&format=json&maxage=1800&maxstations=15&minstations=1&centerLat=%s&centerLon=%s&height=400&width=400&iconsize=2', $lat, $lon);
-//$wunderwpsstring = str_replace("&", "&amp;", $wunderwpsstring);
-//echo $wunderwpsstring;
-$json = file_get_contents($wunderwpsstring);
-//echo($json);
-$jsonObj = json_decode($json);
-$geolookup = $jsonObj->geolookup;
-$location = $geolookup->location;
-$nearby_weather_stations = $location->nearby_weather_stations->pws->station;
-//var_dump($jsonObj);
-//$nearby_weather_stations = $jsonObj->stations;
-$good = false;
-$wpsIndex = 0;
-
-while (!$good && $wpsIndex < sizeof($nearby_weather_stations) && $wpsIndex < $maxWps) {
-    $wps = $nearby_weather_stations[$wpsIndex];
-    var_dump($wps);
-    $wpsid = $wps->id;
-    $data = getWeatherData($wpsid, $yr, $mo, $da);
-    if(dataHasWind($data))
-    {
-        $timeData = getTimeData($data, $timestamp);
-        echo json_encode($timeData);
-        $good = true;
+    if (isset($_GET['lat'])) {
+        $lat = (floatval($_GET['lat']));
+    }
+    if (isset($_GET['lon'])) {
+        $lon = (floatval($_GET['lon']));
+    }
+    if (isset($_GET['datetime'])) {
+        $timestamp = (intval($_GET['datetime']));
     }
 
-    $wpsIndex++;
-}
+    $datetime = new DateTime('@'.$timestamp);
+    $datetime->setTimezone(new DateTimeZone('Europe/Paris'));
 
-if(!$good)
-{
-    if(sizeof($nearby_weather_stations) > 0)
-    {
-        $wps = $nearby_weather_stations[0];
+    $yr = $datetime->format('Y');
+    $mo = $datetime->format('m');
+    $da = $datetime->format('d');
+
+    $wunderwpsstring = sprintf('https://api-ak.wunderground.com/api/d8585d80376a429e/geolookup/alerts/lang:EN/units:english/bestfct:1/v:2.0/q/%s,%s.json', $lat, $lon);
+    //$wunderwpsstring = sprintf('https://stationdata.wunderground.com/cgi-bin/stationdata?v=2.0&type=ICAO%%2CPWS&units=english&format=json&maxage=1800&maxstations=15&minstations=1&centerLat=%s&centerLon=%s&height=400&width=400&iconsize=2', $lat, $lon);
+    //$wunderwpsstring = str_replace("&", "&amp;", $wunderwpsstring);
+    //echo $wunderwpsstring;
+    $json = file_get_contents($wunderwpsstring);
+    //echo($json);
+    $jsonObj = json_decode($json);
+    $geolookup = $jsonObj->geolookup;
+    $location = $geolookup->location;
+    $nearby_weather_stations = $location->nearby_weather_stations->pws->station;
+    //var_dump($jsonObj);
+    //$nearby_weather_stations = $jsonObj->stations;
+    $good = false;
+    $wpsIndex = 0;
+
+    while (!$good && $wpsIndex < sizeof($nearby_weather_stations) && $wpsIndex < $maxWps) {
+        $wps = $nearby_weather_stations[$wpsIndex];
+        var_dump($wps);
         $wpsid = $wps->id;
         $data = getWeatherData($wpsid, $yr, $mo, $da);
-        $timeData = getTimeData($data, $timestamp);
-        echo json_encode($timeData);
+        if(dataHasWind($data))
+        {
+            $timeData = getTimeData($data, $timestamp);
+            echo json_encode($timeData);
+            $good = true;
+        }
+
+        $wpsIndex++;
     }
-    else
+
+    if(!$good)
     {
-        echo json_encode(array("error" => "no data found"));
+        if(sizeof($nearby_weather_stations) > 0)
+        {
+            $wps = $nearby_weather_stations[0];
+            $wpsid = $wps->id;
+            $data = getWeatherData($wpsid, $yr, $mo, $da);
+            $timeData = getTimeData($data, $timestamp);
+            echo json_encode($timeData);
+        }
+        else
+        {
+            echo json_encode(array("error" => "no data found"));
+        }
     }
-}
+
+} catch (Exception $e) {
+    echo json_encode(array("error" => var_dump($e->getMessage())));
+}   
+
 
 //
 //
